@@ -14,6 +14,7 @@ import java.util.TreeMap;
 public class DHTNode extends UnicastRemoteObject implements DHTRemote {
 
     private int nodeId;
+    private EdgeRemote edgeServer;
     private SortedMap<Integer, DHTRemote> fingerTable;
     private Map<String, Integer> contentMap;
     private DHTRemote successor;
@@ -24,13 +25,15 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
      * into a 32-bit node id using SHA-1. The first 4 bytes of the SHA-1 digest are used
      * and the sign bit is cleared to produce a non-negative int.
      */
-    public DHTNode(String serverId) throws RemoteException {
+    public DHTNode(String serverId, EdgeRemote edgeServer)
+        throws RemoteException {
         super();
         this.nodeId = sha1ToInt(serverId);
         this.fingerTable = new TreeMap<>();
         this.contentMap = new HashMap<>();
         this.successor = null;
         this.predecessor = null;
+        this.edgeServer = edgeServer;
     }
 
     /**
@@ -157,18 +160,19 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
             this.predecessor = node;
             return;
         }
-        int predId;
+        DHTRemote pred;
         int nodeIdRemote;
         try {
-            predId = this.predecessor.getNodeId();
+            pred = this.predecessor;
             nodeIdRemote = node.getNodeId();
         } catch (RemoteException e) {
             // if remote calls fail, keep existing predecessor
             return;
         }
-        // if node is in (pred, this), it becomes new predecessor
-        if (inInterval(predId, this.nodeId, nodeIdRemote, false)) {
+        // if node is in (pred, this), update predecessor and successor
+        if (inInterval(pred.getNodeId(), this.nodeId, nodeIdRemote, false)) {
             this.predecessor = node;
+            pred.stabilize();
         }
     }
 
@@ -188,6 +192,10 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         this.successor = succ;
     }
 
+    public EdgeRemote getEdgeServer() throws RemoteException {
+        return this.edgeServer;
+    }
+
     public void stabilize() throws RemoteException {
         // - ask successor for its predecessor
         // - if that predecessor is between this and successor, update successor
@@ -196,13 +204,15 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         DHTRemote x = null;
         try {
             x = this.successor.getPredecessor();
+            if (
+                x != null &&
+                x != this &&
+                x.getNodeId() > this.nodeId &&
+                x.getNodeId() < this.successor.getNodeId()
+            ) this.successor = x;
+            this.successor.notify(this);
         } catch (Exception e) {
             // ignore and continue
-        }
-        try {
-            this.successor.notify(this);
-        } catch (RemoteException e) {
-            // successor unreachable
         }
     }
 
@@ -235,14 +245,12 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         }
     }
 
-    @Override
     public DHTRemote lookup(String key) throws RemoteException {
         // Map the key to an id in the identifier space and find its successor node
         int id = sha1ToInt(key);
         return findSuccessor(id);
     }
 
-    @Override
     public void addMapping(String contentId) throws RemoteException {
         // Store mapping locally. In a full Chord implementation this would be
         // called on the node responsible for the content id.
@@ -250,14 +258,12 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         contentMap.put(contentId, id);
     }
 
-    @Override
     public void removeMapping(String contentId) throws RemoteException {
         contentMap.remove(contentId);
     }
 
-    @Override
     public void leave(EdgeRemote edge) throws RemoteException {
-        // When an edge (cache server) leaves, remove mappings that reference it.
+        // When an edge leaves, remove mappings that reference it.
         // This is a conservative approach: we remove mappings for which the leaving
         // edge reports it has the content. If the edge can't be queried, we skip.
         if (edge == null) return;

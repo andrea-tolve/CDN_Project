@@ -10,5 +10,7 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
 
     private String serverId;
     private Cache cache;
-    private Set<String> respkeys;
+    private Set<String> respKeys;
+    private DHTRemote dhtNode;
+    private OriginRemote originServer;
 }
