@@ -16,6 +16,8 @@ public interface DHTRemote extends Remote {
     public int getNodeId() throws RemoteException;
     public DHTRemote getSuccessor() throws RemoteException;
     public DHTRemote getPredecessor() throws RemoteException;
-    public void setSuccessor(DHTRemote succ) throws RemoteException; //maybe remove
-    public EdgeRemote getEdgeServer() throws RemoteException;
+    public EdgeRemote getEdge() throws RemoteException;
+    public void setSuccessor(DHTRemote succ) throws RemoteException;
+    public void setPredecessor(DHTRemote pred) throws RemoteException;
+    public void computeFingerTable() throws RemoteException;
 }

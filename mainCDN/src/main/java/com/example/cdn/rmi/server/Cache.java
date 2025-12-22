@@ -12,6 +12,10 @@ public class Cache {
         this.entries = new HashMap<>();
     }
 
+    public boolean hasContent(String contentId) {
+        return entries.containsKey(contentId);
+    }
+
     public byte[] get(String key) {
         return entries.get(key);
     }

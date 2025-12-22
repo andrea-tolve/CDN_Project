@@ -2,6 +2,7 @@ package com.example.cdn.rmi.server;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.Map;
 
 public class OriginServer extends UnicastRemoteObject implements OriginRemote {

@@ -2,6 +2,7 @@ package com.example.cdn.rmi.client;
 
 import com.example.cdn.rmi.lb.LoadBalancerRemote;
 import com.example.cdn.rmi.server.EdgeRemote;
+import java.io.Serializable;
 import java.rmi.Naming;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -17,7 +18,12 @@ public class Client implements ClientRemote, Serializable {
         throws RemoteException {
         this.clientId = clientId;
         this.server = null;
-        this.loadBalancer = (LoadBalancerRemote) Naming.lookup(serverlb);
+        try {
+            this.loadBalancer = (LoadBalancerRemote) Naming.lookup(serverlb);
+        } catch (Exception e) {
+            System.err.println("Client exception: " + e.toString());
+            e.printStackTrace();
+        }
     }
 
     public void requestContent(String contentId) throws RemoteException {

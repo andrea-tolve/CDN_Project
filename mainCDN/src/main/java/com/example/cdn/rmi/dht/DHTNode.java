@@ -1,5 +1,6 @@
 package com.example.cdn.rmi.dht;
 
+import com.example.cdn.rmi.server.EdgeRemote;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
@@ -12,6 +13,10 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class DHTNode extends UnicastRemoteObject implements DHTRemote {
+
+    public static final int FINGER_TABLE_SIZE = 160;
+
+    public static final int MAX_NODE_ID = 1 << FINGER_TABLE_SIZE;
 
     private int nodeId;
     private EdgeRemote edgeServer;
@@ -78,6 +83,21 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
                 }
             }
         }
+        computeFingerTable();
+        if (this.successor != null) this.successor.computeFingerTable();
+        if (this.predecessor != null) this.predecessor.computeFingerTable();
+    }
+
+    public void computeFingerTable() {
+        // Compute finger table entries
+        for (int i = 0; i < FINGER_TABLE_SIZE; i++) {
+            int fingerId = (this.nodeId + (1 << i)) % MAX_NODE_ID;
+            try {
+                fingerTable.put(i, findSuccessor(fingerId));
+            } catch (RemoteException e) {
+                // ignore for now; stabilize will fix relationships
+            }
+        }
     }
 
     public DHTRemote findSuccessor(int id) throws RemoteException {
@@ -109,7 +129,7 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
             } catch (RemoteException e) {
                 return this;
             }
-            // recursive/iterative lookup forwarded to n0
+            // recursive lookup forwarded to n0
             return n0.findSuccessor(id);
         }
     }
@@ -188,12 +208,16 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         return this.predecessor;
     }
 
+    public EdgeRemote getEdge() throws RemoteException {
+        return this.edgeServer;
+    }
+
     public void setSuccessor(DHTRemote succ) throws RemoteException {
         this.successor = succ;
     }
 
-    public EdgeRemote getEdgeServer() throws RemoteException {
-        return this.edgeServer;
+    public void setPredecessor(DHTRemote pred) throws RemoteException {
+        this.predecessor = pred;
     }
 
     public void stabilize() throws RemoteException {
@@ -245,10 +269,11 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         }
     }
 
-    public DHTRemote lookup(String key) throws RemoteException {
+    public EdgeRemote lookup(String key) throws RemoteException {
         // Map the key to an id in the identifier space and find its successor node
         int id = sha1ToInt(key);
-        return findSuccessor(id);
+        DHTRemote successor = findSuccessor(id);
+        return successor.getEdge();
     }
 
     public void addMapping(String contentId) throws RemoteException {
@@ -277,5 +302,15 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
                     return false;
                 }
             });
+        if (this.successor != null) {
+            this.successor.setPredecessor(this.predecessor);
+            this.successor.computeFingerTable();
+            this.successor = null;
+        }
+        if (this.predecessor != null) {
+            this.predecessor.setSuccessor(this.successor);
+            this.predecessor.computeFingerTable();
+            this.predecessor = null;
+        }
     }
 }
