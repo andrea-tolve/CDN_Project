@@ -20,13 +20,16 @@ public class Cache {
         return entries.get(key);
     }
 
-    public void put(String key, byte[] value) {
+    public String put(String key, byte[] value) {
+        String old = "";
         if (entries.size() >= capacity) {
             // Least Recently Used (LRU) eviction policy
             String oldestKey = entries.keySet().iterator().next();
+            old = oldestKey;
             entries.remove(oldestKey);
         }
         entries.put(key, value);
+        return old;
     }
 
     public void remove(String key) {

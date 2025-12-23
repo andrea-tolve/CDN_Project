@@ -8,7 +8,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -21,7 +21,7 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
     private int nodeId;
     private EdgeRemote edgeServer;
     private SortedMap<Integer, DHTRemote> fingerTable;
-    private Map<String, Integer> contentMap;
+    private HashSet<String> keySet;
     private DHTRemote successor;
     private DHTRemote predecessor;
 
@@ -35,7 +35,7 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         super();
         this.nodeId = sha1ToInt(serverId);
         this.fingerTable = new TreeMap<>();
-        this.contentMap = new HashMap<>();
+        this.keySet = new HashSet<>();
         this.successor = null;
         this.predecessor = null;
         this.edgeServer = edgeServer;
@@ -102,9 +102,10 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
 
     public DHTRemote findSuccessor(int id) throws RemoteException {
         // If successor is null, we're alone
+        // I TRY TO REPLACE THIS WITH NULL
         DHTRemote succ = this.getSuccessor();
         if (succ == null) {
-            return this;
+            return null; //this
         }
         int succId;
         try {
@@ -119,15 +120,15 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         } else {
             DHTRemote n0 = this.closestPrecedingFinger(id);
             if (n0 == null) {
-                return this;
+                return null; //this
             }
             // If closest preceding finger is self, avoid infinite recursion
             try {
                 if (n0.getNodeId() == this.nodeId) {
-                    return this;
+                    return this; //check if correct
                 }
             } catch (RemoteException e) {
-                return this;
+                return null; //this
             }
             // recursive lookup forwarded to n0
             return n0.findSuccessor(id);
@@ -220,6 +221,10 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         this.predecessor = pred;
     }
 
+    public boolean hasKey(String contentId) throws RemoteException {
+        return this.keySet.contains(contentId);
+    }
+
     public void stabilize() throws RemoteException {
         // - ask successor for its predecessor
         // - if that predecessor is between this and successor, update successor
@@ -269,39 +274,31 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         }
     }
 
-    public EdgeRemote lookup(String key) throws RemoteException {
+    public EdgeRemote lookup(String contentId) throws RemoteException {
         // Map the key to an id in the identifier space and find its successor node
-        int id = sha1ToInt(key);
-        DHTRemote successor = findSuccessor(id);
-        return successor.getEdge();
-    }
-
-    public void addMapping(String contentId) throws RemoteException {
-        // Store mapping locally. In a full Chord implementation this would be
-        // called on the node responsible for the content id.
         int id = sha1ToInt(contentId);
-        contentMap.put(contentId, id);
+        DHTRemote successor = findSuccessor(id);
+        if (successor.hasKey(contentId)) return successor.getEdge();
+        else return null;
     }
 
-    public void removeMapping(String contentId) throws RemoteException {
-        contentMap.remove(contentId);
+    public void add(String contentId) throws RemoteException {
+        // Store resource in dht only if this is the correct node
+        int id = sha1ToInt(contentId);
+        DHTRemote successor = findSuccessor(id);
+        if (successor == this) this.keySet.add(contentId);
     }
 
-    public void leave(EdgeRemote edge) throws RemoteException {
-        // When an edge leaves, remove mappings that reference it.
-        // This is a conservative approach: we remove mappings for which the leaving
-        // edge reports it has the content. If the edge can't be queried, we skip.
-        if (edge == null) return;
-        contentMap
-            .entrySet()
-            .removeIf(entry -> {
-                try {
-                    return edge.hasContent(entry.getKey());
-                } catch (RemoteException ex) {
-                    // if we can't query the edge, don't remove the mapping here
-                    return false;
-                }
-            });
+    public void remove(String contentId) throws RemoteException {
+        //remove only if it is stored in this node
+        if (this.hasKey(contentId)) {
+            this.keySet.remove(contentId);
+        }
+    }
+
+    public void leave() throws RemoteException {
+        // When leaving remove keys from this node
+        this.keySet.clear();
         if (this.successor != null) {
             this.successor.setPredecessor(this.predecessor);
             this.successor.computeFingerTable();
