@@ -8,7 +8,8 @@ import java.util.Map;
 
 public class LoadBalancer
     extends UnicastRemoteObject
-    implements LoadBalancerRemote {
+    implements LoadBalancerRemote
+{
 
     Map<EdgeRemote, Integer> activeConnections = new HashMap<>();
 

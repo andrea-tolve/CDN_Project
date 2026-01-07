@@ -10,12 +10,13 @@ public class OriginServer extends UnicastRemoteObject implements OriginRemote {
     private Map<String, byte[]> storage;
 
     public OriginServer() throws RemoteException {
+        super();
         storage = new HashMap<>();
     }
 
     public void storeContent(String key, byte[] content)
         throws RemoteException {
-        //Future feature
+        storage.put(key, content);
     }
 
     public void deleteContent(String key) throws RemoteException {

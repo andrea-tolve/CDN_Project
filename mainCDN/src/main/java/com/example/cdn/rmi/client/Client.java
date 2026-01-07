@@ -2,20 +2,18 @@ package com.example.cdn.rmi.client;
 
 import com.example.cdn.rmi.lb.LoadBalancerRemote;
 import com.example.cdn.rmi.server.EdgeRemote;
-import java.io.Serializable;
 import java.rmi.Naming;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public class Client implements ClientRemote, Serializable {
+public class Client {
 
-    private String serverlb = "//localhost/LoadBalancerService";
+    private String serverlb = "//localhost/LoadBalancer";
     private int clientId;
     private EdgeRemote server;
     private LoadBalancerRemote loadBalancer;
+    private byte[] content;
 
-    public Client(int clientId, LoadBalancerRemote loadBalancer)
-        throws RemoteException {
+    public Client(int clientId) {
         this.clientId = clientId;
         this.server = null;
         try {
@@ -26,8 +24,17 @@ public class Client implements ClientRemote, Serializable {
         }
     }
 
-    public void requestContent(String contentId) throws RemoteException {
-        server = loadBalancer.getEdgeWithLeastConnections();
-        server.getContent(contentId);
+    public void requestContent(String contentId) {
+        try {
+            server = loadBalancer.getEdgeWithLeastConnections();
+            content = server.getContent(contentId);
+        } catch (RemoteException e) {
+            System.err.println("Client exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    public byte[] getContent() {
+        return content;
     }
 }

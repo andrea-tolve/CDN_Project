@@ -10,24 +10,27 @@ import java.util.Set;
 
 public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
 
-    private String originserver = "//localhost/OriginServer";
+    private String serverAddress = "//localhost/OriginServer";
     private String serverId;
     private Cache cache;
     private DHTRemote dhtNode;
     private OriginRemote originServer;
     private EdgeRemote edgeServer;
 
-    public EdgeServer(String serverId, Cache cache, DHTRemote dhtNode)
-        throws RemoteException {
+    public EdgeServer(String serverId, Cache cache) throws RemoteException {
+        super();
         this.serverId = serverId;
         this.cache = cache;
-        this.dhtNode = dhtNode;
         try {
-            this.originServer = (OriginRemote) Naming.lookup(originserver);
+            this.originServer = (OriginRemote) Naming.lookup(serverAddress);
         } catch (Exception e) {
             System.err.println("EdgeServer: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public void setDHTNode(DHTRemote stub) {
+        this.dhtNode = stub;
     }
 
     public boolean hasContent(String contentId) throws RemoteException {
