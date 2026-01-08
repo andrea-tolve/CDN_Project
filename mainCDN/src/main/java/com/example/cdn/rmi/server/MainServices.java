@@ -2,9 +2,6 @@ package com.example.cdn.rmi.server;
 
 import com.example.cdn.rmi.dht.*;
 import com.example.cdn.rmi.lb.LoadBalancer;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -29,23 +26,18 @@ public class MainServices {
         for (int i = 0; i < edgeServers.length; i++) {
             try {
                 edgeServers[i] = new EdgeServer(
-                    "" + i,
+                    "EdgeServer" + i,
                     new Cache(cachecapacity)
                 );
-                // Export the edge server as an RMI object
-                stubsEdge[i] = (EdgeRemote) UnicastRemoteObject.exportObject(
-                    edgeServers[i],
-                    0
+                // Oggetto già esportato: ottieni lo stub senza riesportare
+                stubsEdge[i] = (EdgeRemote) UnicastRemoteObject.toStub(
+                    edgeServers[i]
                 );
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                dhtTable[i] = new DHTNode("" + i, stubsEdge[i]);
-                // Export the DHT node as an RMI object
-                stubsDHT[i] = (DHTRemote) UnicastRemoteObject.exportObject(
-                    dhtTable[i],
-                    0
+                dhtTable[i] = new DHTNode("DHTNode" + i, stubsEdge[i]);
+                if (i == 0) dhtTable[i].join(null);
+                else dhtTable[i].join(dhtTable[i - 1]);
+                stubsDHT[i] = (DHTRemote) UnicastRemoteObject.toStub(
+                    dhtTable[i]
                 );
             } catch (Exception e) {
                 e.printStackTrace();
@@ -66,11 +58,11 @@ public class MainServices {
             return;
         }
         try {
-            Naming.rebind("LoadBalancer", loadBalancer);
-            System.out.println("LoadBalancer bound");
             for (int i = 0; i < stubsEdge.length; i++) {
                 loadBalancer.addEdge(stubsEdge[i]);
             }
+            Naming.rebind("LoadBalancer", loadBalancer);
+            System.out.println("LoadBalancer bound");
         } catch (Exception e) {
             System.err.println("LoadBalancer exception: " + e.toString());
             e.printStackTrace();

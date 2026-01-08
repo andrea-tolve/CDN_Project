@@ -1,2 +1,6 @@
 .tkn
+.zed/
+.project
+.settings/
+.classpath
 mainCDN/target

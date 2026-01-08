@@ -1,12 +1,9 @@
 package com.example.cdn.rmi.server;
 
 import com.example.cdn.rmi.dht.DHTRemote;
-import com.example.cdn.rmi.server.Cache;
 import java.rmi.Naming;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Set;
 
 public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
 
@@ -44,6 +41,7 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
             //search in DHT
             edgeServer = dhtNode.lookup(contentId);
             if (edgeServer != null && edgeServer != this) {
+                System.out.println("Get it from " + edgeServer.getServerId());
                 return edgeServer.getContent(contentId);
             } else {
                 byte[] content = originServer.getContent(contentId);
@@ -53,5 +51,9 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
                 return content;
             }
         }
+    }
+
+    public String getServerId() throws RemoteException {
+        return serverId;
     }
 }

@@ -27,6 +27,10 @@ public class Client {
     public void requestContent(String contentId) {
         try {
             server = loadBalancer.getEdgeWithLeastConnections();
+            if (server == null) {
+                System.err.println("No available server");
+                return;
+            }
             content = server.getContent(contentId);
         } catch (RemoteException e) {
             System.err.println("Client exception: " + e.toString());
@@ -36,5 +40,9 @@ public class Client {
 
     public byte[] getContent() {
         return content;
+    }
+
+    public int getClientId() {
+        return clientId;
     }
 }

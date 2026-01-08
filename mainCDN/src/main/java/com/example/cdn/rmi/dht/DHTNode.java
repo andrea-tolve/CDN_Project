@@ -7,16 +7,16 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class DHTNode extends UnicastRemoteObject implements DHTRemote {
 
-    public static final int FINGER_TABLE_SIZE = 160;
+    public static final int FINGER_TABLE_SIZE = 31; // For integer
 
-    public static final int MAX_NODE_ID = 1 << FINGER_TABLE_SIZE;
+    // Use 31-bit non-negative ID space
+    public static final int ID_SPACE_MASK = 0x7fffffff;
 
     private int nodeId;
     private EdgeRemote edgeServer;
@@ -56,7 +56,7 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
             );
             ByteBuffer bb = ByteBuffer.wrap(digest);
             int val = bb.getInt(); // take first 4 bytes
-            return val & 0x7fffffff; // make non-negative
+            return val & ID_SPACE_MASK; // make non-negative
         } catch (NoSuchAlgorithmException e) {
             // SHA-1 is expected to be available on the JVM; rethrow as unchecked if not.
             throw new RuntimeException("SHA-1 algorithm not available", e);
@@ -70,28 +70,32 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         if (bootstrapNode == null) {
             // first node in the ring
             this.successor = this;
-            this.predecessor = null;
+            this.predecessor = this;
         } else {
             // find successor for this node id using bootstrap
             this.successor = bootstrapNode.findSuccessor(this.nodeId);
-            // optionally notify successor about ourselves
             if (this.successor != null) {
                 try {
                     this.successor.notify(this);
                 } catch (RemoteException e) {
-                    // ignore for now; stabilize will fix relationships
+                    e.printStackTrace();
                 }
             }
         }
         computeFingerTable();
-        if (this.successor != null) this.successor.computeFingerTable();
-        if (this.predecessor != null) this.predecessor.computeFingerTable();
+        if (
+            this.successor != null && this.successor != this
+        ) this.successor.computeFingerTable();
+        if (
+            this.predecessor != null && this.predecessor != this
+        ) this.predecessor.computeFingerTable();
     }
 
     public void computeFingerTable() {
         // Compute finger table entries
         for (int i = 0; i < FINGER_TABLE_SIZE; i++) {
-            int fingerId = (this.nodeId + (1 << i)) % MAX_NODE_ID;
+            int fingerId = (int) (((long) this.nodeId + (1L << i)) &
+                ID_SPACE_MASK);
             try {
                 fingerTable.put(i, findSuccessor(fingerId));
             } catch (RemoteException e) {
@@ -102,10 +106,9 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
 
     public DHTRemote findSuccessor(int id) throws RemoteException {
         // If successor is null, we're alone
-        // I TRY TO REPLACE THIS WITH NULL
         DHTRemote succ = this.getSuccessor();
         if (succ == null) {
-            return null; //this
+            return this;
         }
         int succId;
         try {
@@ -120,15 +123,15 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         } else {
             DHTRemote n0 = this.closestPrecedingFinger(id);
             if (n0 == null) {
-                return null; //this
+                return this;
             }
             // If closest preceding finger is self, avoid infinite recursion
             try {
                 if (n0.getNodeId() == this.nodeId) {
-                    return this; //check if correct
+                    return this;
                 }
             } catch (RemoteException e) {
-                return null; //this
+                return this;
             }
             // recursive lookup forwarded to n0
             return n0.findSuccessor(id);
@@ -190,10 +193,9 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
             // if remote calls fail, keep existing predecessor
             return;
         }
-        // if node is in (pred, this), update predecessor and successor
+        // if node is in (pred, this), update predecessor
         if (inInterval(pred.getNodeId(), this.nodeId, nodeIdRemote, false)) {
             this.predecessor = node;
-            pred.stabilize();
         }
     }
 
@@ -229,16 +231,18 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         // - ask successor for its predecessor
         // - if that predecessor is between this and successor, update successor
         // - notify successor about ourselves
-        if (this.successor == null || this.successor == this) return;
-        DHTRemote x = null;
+        if (this.successor == null) {
+            this.successor = this;
+        }
         try {
-            x = this.successor.getPredecessor();
-            if (
-                x != null &&
-                x != this &&
-                x.getNodeId() > this.nodeId &&
-                x.getNodeId() < this.successor.getNodeId()
-            ) this.successor = x;
+            DHTRemote x = this.successor.getPredecessor();
+            if (x != null && x != this) {
+                int succId = this.successor.getNodeId();
+                int xId = x.getNodeId();
+                if (inInterval(this.nodeId, succId, xId, false)) {
+                    this.successor = x;
+                }
+            }
             this.successor.notify(this);
         } catch (Exception e) {
             // ignore and continue
@@ -286,7 +290,10 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         // Store resource in dht only if this is the correct node
         int id = sha1ToInt(contentId);
         DHTRemote successor = findSuccessor(id);
-        if (successor == this) this.keySet.add(contentId);
+        if (successor == this) {
+            System.out.println("Adding contentId: " + contentId);
+            this.keySet.add(contentId);
+        }
     }
 
     public void remove(String contentId) throws RemoteException {
@@ -299,15 +306,17 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
     public void leave() throws RemoteException {
         // When leaving remove keys from this node
         this.keySet.clear();
-        if (this.successor != null) {
-            this.successor.setPredecessor(this.predecessor);
-            this.successor.computeFingerTable();
-            this.successor = null;
+        DHTRemote succ = this.successor;
+        DHTRemote pred = this.predecessor;
+        if (succ != null) {
+            succ.setPredecessor(pred);
+            succ.computeFingerTable();
         }
-        if (this.predecessor != null) {
-            this.predecessor.setSuccessor(this.successor);
-            this.predecessor.computeFingerTable();
-            this.predecessor = null;
+        if (pred != null) {
+            pred.setSuccessor(succ);
+            pred.computeFingerTable();
         }
+        this.successor = null;
+        this.predecessor = null;
     }
 }

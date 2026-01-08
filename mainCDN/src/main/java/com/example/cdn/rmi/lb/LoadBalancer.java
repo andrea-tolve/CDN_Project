@@ -31,6 +31,9 @@ public class LoadBalancer
 
         for (EdgeRemote edge : activeConnections.keySet()) {
             int connections = activeConnections.get(edge);
+            System.out.println(
+                "Edge: " + edge.getServerId() + ", Connections: " + connections
+            );
             if (connections < minConnections) {
                 minConnections = connections;
                 bestEdge = edge;
