@@ -1,15 +1,32 @@
 package com.example.cdn.rmi.server;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Cache {
 
-    private int capacity;
-    private HashMap<String, byte[]> entries;
+    private final int capacity;
+    private final LinkedHashMap<String, byte[]> entries;
+    private String oldKey;
 
     public Cache(int capacity) {
         this.capacity = capacity;
-        this.entries = new HashMap<>();
+        this.entries = new LinkedHashMap<String, byte[]>(
+            capacity,
+            0.75f,
+            true
+        ) {
+            @Override
+            protected boolean removeEldestEntry(
+                Map.Entry<String, byte[]> eldest
+            ) {
+                if (size() > Cache.this.capacity) {
+                    oldKey = eldest.getKey();
+                    return true;
+                }
+                return false;
+            }
+        };
     }
 
     public boolean hasContent(String contentId) {
@@ -21,15 +38,8 @@ public class Cache {
     }
 
     public String put(String key, byte[] value) {
-        String old = "";
-        if (entries.size() >= capacity) {
-            // Least Recently Used (LRU) eviction policy
-            String oldestKey = entries.keySet().iterator().next();
-            old = oldestKey;
-            entries.remove(oldestKey);
-        }
         entries.put(key, value);
-        return old;
+        return oldKey;
     }
 
     public void remove(String key) {
