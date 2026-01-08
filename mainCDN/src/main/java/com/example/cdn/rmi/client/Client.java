@@ -19,17 +19,24 @@ public class Client {
         try {
             this.loadBalancer = (LoadBalancerRemote) Naming.lookup(serverlb);
         } catch (Exception e) {
-            System.err.println("Client exception: " + e.toString());
             e.printStackTrace();
         }
     }
 
     public void requestContent(String contentId) {
         try {
-            server = loadBalancer.getEdgeWithLeastConnections();
             if (server == null) {
-                System.err.println("No available server");
-                return;
+                server = loadBalancer.getEdgeWithLeastConnections();
+                System.out.println(
+                    "Client " +
+                        clientId +
+                        " connected to server " +
+                        server.getServerId()
+                );
+                if (server == null) {
+                    System.err.println("No available server");
+                    return;
+                }
             }
             content = server.getContent(contentId);
         } catch (RemoteException e) {

@@ -14,7 +14,7 @@ public interface DHTRemote extends Remote {
     public void remove(String contentId) throws RemoteException;
     public boolean hasKey(String contentId) throws RemoteException;
     public void leave() throws RemoteException;
-    public void stabilize() throws RemoteException;
+    public void stabilize(DHTRemote bootstrapNode) throws RemoteException;
     public int getNodeId() throws RemoteException;
     public DHTRemote getSuccessor() throws RemoteException;
     public DHTRemote getPredecessor() throws RemoteException;

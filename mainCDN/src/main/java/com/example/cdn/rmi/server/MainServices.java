@@ -21,7 +21,7 @@ public class MainServices {
         }
         EdgeRemote[] stubsEdge = new EdgeRemote[3];
         DHTRemote[] stubsDHT = new DHTRemote[3];
-        int cachecapacity = 10;
+        int cachecapacity = 2;
 
         for (int i = 0; i < edgeServers.length; i++) {
             try {

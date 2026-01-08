@@ -10,9 +10,10 @@ public class MainOrigin {
         // Initialize the origin server
         try {
             OriginServer originServer = new OriginServer();
-            File file = new File("res/Hello.txt");
-            byte[] content = Files.readAllBytes(file.toPath());
-            originServer.storeContent("Hello.txt", content);
+            for (File file : new File("res").listFiles()) {
+                byte[] content = Files.readAllBytes(file.toPath());
+                originServer.storeContent(file.getName(), content);
+            }
             Naming.rebind("OriginServer", originServer);
             System.out.println("OriginServer bound");
         } catch (Exception e) {

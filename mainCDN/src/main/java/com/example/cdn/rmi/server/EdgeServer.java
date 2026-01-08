@@ -36,6 +36,7 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
 
     public byte[] getContent(String contentId) throws RemoteException {
         if (cache.hasContent(contentId)) {
+            System.out.println("Get it from cache of " + serverId);
             return cache.get(contentId);
         } else {
             //search in DHT
@@ -48,6 +49,7 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
                 String oldKey = cache.put(contentId, content);
                 if (oldKey != "") dhtNode.remove(oldKey);
                 dhtNode.add(contentId);
+                System.out.println("Get it from origin server");
                 return content;
             }
         }

@@ -73,14 +73,8 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
             this.predecessor = this;
         } else {
             // find successor for this node id using bootstrap
-            this.successor = bootstrapNode.findSuccessor(this.nodeId);
-            if (this.successor != null) {
-                try {
-                    this.successor.notify(this);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
+            stabilize(bootstrapNode);
+            bootstrapNode.stabilize(this);
         }
         computeFingerTable();
         if (
@@ -227,25 +221,26 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         return this.keySet.contains(contentId);
     }
 
-    public void stabilize() throws RemoteException {
+    public void stabilize(DHTRemote bootstrapNode) throws RemoteException {
         // - ask successor for its predecessor
         // - if that predecessor is between this and successor, update successor
         // - notify successor about ourselves
-        if (this.successor == null) {
-            this.successor = this;
-        }
-        try {
-            DHTRemote x = this.successor.getPredecessor();
-            if (x != null && x != this) {
-                int succId = this.successor.getNodeId();
-                int xId = x.getNodeId();
-                if (inInterval(this.nodeId, succId, xId, false)) {
-                    this.successor = x;
+        this.successor = bootstrapNode.findSuccessor(this.nodeId);
+        if (this.successor != null) {
+            try {
+                //check if there is a better successor
+                DHTRemote x = this.successor.getPredecessor();
+                if (x != null && x != this && x != this.successor) {
+                    int succId = this.successor.getNodeId();
+                    int xId = x.getNodeId();
+                    if (inInterval(this.nodeId, succId, xId, false)) {
+                        this.successor = x;
+                    }
                 }
+                this.successor.notify(this); //update successor's predecessor
+            } catch (Exception e) {
+                // ignore and continue
             }
-            this.successor.notify(this);
-        } catch (Exception e) {
-            // ignore and continue
         }
     }
 
@@ -273,8 +268,7 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
                 return id > start || id < end;
             }
         } else {
-            // start == end -> full circle; typically only true if single-node ring
-            return inclusiveEnd || id != start;
+            return true;
         }
     }
 
@@ -289,9 +283,14 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
     public void add(String contentId) throws RemoteException {
         // Store resource in dht only if this is the correct node
         int id = sha1ToInt(contentId);
-        DHTRemote successor = findSuccessor(id);
+        DHTRemote successor = findSuccessor(id); //test from here which successor is returned
         if (successor == this) {
-            System.out.println("Adding contentId: " + contentId);
+            System.out.println(
+                "Edge: " +
+                    this.edgeServer.getServerId() +
+                    ", Adding contentId: " +
+                    contentId
+            );
             this.keySet.add(contentId);
         }
     }
@@ -300,6 +299,12 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         //remove only if it is stored in this node
         if (this.hasKey(contentId)) {
             this.keySet.remove(contentId);
+            System.out.println(
+                "Edge: " +
+                    this.edgeServer.getServerId() +
+                    ", Removing contentId: " +
+                    contentId
+            );
         }
     }
 
