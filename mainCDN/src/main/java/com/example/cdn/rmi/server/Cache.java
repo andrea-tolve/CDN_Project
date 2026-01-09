@@ -6,7 +6,7 @@ import java.util.Map;
 public class Cache {
 
     private final int capacity;
-    private final LinkedHashMap<String, byte[]> entries;
+    private final LinkedHashMap<String, byte[]> entries; // LinkedHashMap consists of entries in insertion order
     private String oldKey;
 
     public Cache(int capacity) {

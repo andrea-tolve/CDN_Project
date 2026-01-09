@@ -48,7 +48,7 @@ public class MainServices {
         for (int i = 0; i < edgeServers.length; i++) {
             edgeServers[i].setDHTNode(stubsDHT[i]);
         }
-
+        System.out.println("Edge servers bound");
         // Initialize the load balancer
         LoadBalancer loadBalancer;
         try {

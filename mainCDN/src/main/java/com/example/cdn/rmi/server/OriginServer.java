@@ -4,13 +4,16 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class OriginServer extends UnicastRemoteObject implements OriginRemote {
 
     private Map<String, byte[]> storage;
+    private AtomicInteger clientId;
 
     public OriginServer() throws RemoteException {
         super();
+        clientId = new AtomicInteger(0);
         storage = new HashMap<>();
     }
 
@@ -24,6 +27,13 @@ public class OriginServer extends UnicastRemoteObject implements OriginRemote {
     }
 
     public byte[] getContent(String key) throws RemoteException {
-        return storage.get(key);
+        if (storage.containsKey(key)) {
+            return storage.get(key);
+        }
+        return null;
+    }
+
+    public int registerClient() throws RemoteException {
+        return clientId.incrementAndGet();
     }
 }

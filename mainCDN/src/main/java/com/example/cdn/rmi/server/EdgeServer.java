@@ -46,6 +46,10 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
                 return edgeServer.getContent(contentId);
             } else {
                 byte[] content = originServer.getContent(contentId);
+                if (content == null) {
+                    System.out.println("Content not found");
+                    return null;
+                }
                 String oldKey = cache.put(contentId, content);
                 if (oldKey != null) dhtNode.remove(oldKey);
                 dhtNode.add(contentId);

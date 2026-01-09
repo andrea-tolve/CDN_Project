@@ -5,4 +5,5 @@ import java.rmi.RemoteException;
 
 public interface OriginRemote extends Remote {
     public byte[] getContent(String key) throws RemoteException;
+    public int registerClient() throws RemoteException;
 }
