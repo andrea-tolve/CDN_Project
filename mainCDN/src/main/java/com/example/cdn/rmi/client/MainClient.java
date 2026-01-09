@@ -29,10 +29,6 @@ public class MainClient {
         do {
             System.out.print("Enter file name: ");
             String fileName = scanner.nextLine();
-            if (!fileName.toLowerCase().endsWith(".txt")) {
-                System.out.println("Only .txt files are allowed.");
-                continue;
-            }
             client.requestContent(fileName);
             byte[] content = client.getContent();
             if (content == null) {
@@ -57,7 +53,6 @@ public class MainClient {
                 System.out.println("Failed to save file: " + ioEx.getMessage());
                 continue;
             }
-            System.out.println(new String(content)); // suppose that files are text files
             System.out.print("Do you want to continue? (y/n): ");
             String choice = scanner.nextLine();
             exit = choice.equalsIgnoreCase("n");
