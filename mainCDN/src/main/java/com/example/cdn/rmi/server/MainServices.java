@@ -2,6 +2,7 @@ package com.example.cdn.rmi.server;
 
 import com.example.cdn.rmi.dht.*;
 import com.example.cdn.rmi.lb.LoadBalancer;
+import com.example.cdn.rmi.register.RegistryServer;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -21,7 +22,7 @@ public class MainServices {
         }
         EdgeRemote[] stubsEdge = new EdgeRemote[3];
         DHTRemote[] stubsDHT = new DHTRemote[3];
-        int cachecapacity = 2;
+        int cachecapacity = 10;
 
         for (int i = 0; i < edgeServers.length; i++) {
             try {
@@ -65,6 +66,22 @@ public class MainServices {
             System.out.println("LoadBalancer bound");
         } catch (Exception e) {
             System.err.println("LoadBalancer exception: " + e.toString());
+            e.printStackTrace();
+        }
+
+        //Initialize the Register Service
+        RegistryServer registryServer;
+        try {
+            registryServer = new RegistryServer();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            return;
+        }
+        try {
+            Naming.rebind("RegistryServer", registryServer);
+            System.out.println("RegisterService bound");
+        } catch (Exception e) {
+            System.err.println("RegisterService exception: " + e.toString());
             e.printStackTrace();
         }
     }

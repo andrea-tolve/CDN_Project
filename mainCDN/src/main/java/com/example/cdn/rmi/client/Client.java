@@ -2,19 +2,22 @@ package com.example.cdn.rmi.client;
 
 import com.example.cdn.rmi.lb.LoadBalancerRemote;
 import com.example.cdn.rmi.server.EdgeRemote;
+import java.io.Serializable;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 
-public class Client {
+public class Client implements Serializable {
 
     private String serverlb = "//localhost/LoadBalancer";
     private int clientId;
+    private String clientToken;
     private EdgeRemote server;
     private LoadBalancerRemote loadBalancer;
     private byte[] content;
 
-    public Client(int clientId) {
+    public Client(int clientId, String clientToken) {
         this.clientId = clientId;
+        this.clientToken = clientToken;
         this.server = null;
         try {
             this.loadBalancer = (LoadBalancerRemote) Naming.lookup(serverlb);
@@ -51,5 +54,13 @@ public class Client {
 
     public int getClientId() {
         return clientId;
+    }
+
+    public void setToken(String token) {
+        this.clientToken = token;
+    }
+
+    public String getClientToken() {
+        return clientToken;
     }
 }

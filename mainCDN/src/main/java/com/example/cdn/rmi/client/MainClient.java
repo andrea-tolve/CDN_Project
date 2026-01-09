@@ -1,6 +1,6 @@
 package com.example.cdn.rmi.client;
 
-import com.example.cdn.rmi.server.OriginRemote;
+import com.example.cdn.rmi.register.RegistryRemote;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,18 +10,18 @@ import java.util.Scanner;
 public class MainClient {
 
     public static void main(String[] args) {
-        int id;
+        Client client;
+        RegistryRemote registry;
         try {
-            OriginRemote originServer = (OriginRemote) Naming.lookup(
-                "//localhost/OriginServer"
+            registry = (RegistryRemote) Naming.lookup(
+                "//localhost/RegistryServer"
             );
-            id = originServer.registerClient();
+            client = registry.register();
         } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
             return;
         }
-        Client client = new Client(id);
-        String clientDir = "data/client_" + id;
+        String clientDir = "data/client_" + client.getClientId();
         createDirectory("data/");
         createDirectory(clientDir);
         Scanner scanner = new Scanner(System.in);
@@ -58,6 +58,11 @@ public class MainClient {
             exit = choice.equalsIgnoreCase("n");
         } while (!exit);
         scanner.close();
+        try {
+            registry.unregister(client.getClientId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void createDirectory(String path) {

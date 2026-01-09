@@ -36,6 +36,7 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
 
     public byte[] getContent(String contentId) throws RemoteException {
         if (cache.hasContent(contentId)) {
+            //search in cache
             System.out.println("Get it from cache of " + serverId);
             return cache.get(contentId);
         } else {
@@ -43,19 +44,30 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
             edgeServer = dhtNode.lookup(contentId);
             if (edgeServer != null && edgeServer != this) {
                 System.out.println("Get it from " + edgeServer.getServerId());
-                return edgeServer.getContent(contentId);
+                byte[] content = edgeServer.getContent(contentId);
+                addInCache(contentId, content);
+                return content;
             } else {
+                //retrive in origin server
                 byte[] content = originServer.getContent(contentId);
                 if (content == null) {
                     System.out.println("Content not found");
                     return null;
                 }
-                String oldKey = cache.put(contentId, content);
-                if (oldKey != null) dhtNode.remove(oldKey);
+                addInCache(contentId, content);
                 dhtNode.add(contentId);
                 System.out.println("Get it from origin server");
                 return content;
             }
+        }
+    }
+
+    private void addInCache(String contentId, byte[] content) {
+        String oldKey = cache.put(contentId, content);
+        try {
+            if (oldKey != null) dhtNode.remove(oldKey);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
