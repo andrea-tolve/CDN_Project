@@ -9,4 +9,5 @@ public interface EdgeRemote extends Remote {
     String getServerId() throws RemoteException;
     boolean storeContent(String contentId, byte[] content)
         throws RemoteException;
+    void shutdown() throws RemoteException;
 }

@@ -4,6 +4,7 @@ import com.example.cdn.rmi.lb.LoadBalancerRemote;
 import com.example.cdn.rmi.server.EdgeRemote;
 import java.io.Serializable;
 import java.rmi.Naming;
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 
 public class Client implements Serializable {
@@ -27,19 +28,13 @@ public class Client implements Serializable {
     public void requestContent(String contentId) {
         try {
             if (server == null) {
-                server = loadBalancer.getEdgeWithLeastConnections();
-                System.out.println(
-                    "Client " +
-                        clientId +
-                        " connected to server " +
-                        server.getServerId()
-                );
-                if (server == null) {
-                    System.err.println("No available server");
-                    return;
-                }
+                connectToServer();
             }
             content = server.getContent(contentId);
+        } catch (NoSuchObjectException e) {
+            System.out.println("Server is not available");
+            server = null;
+            connectToServer();
         } catch (RemoteException e) {
             System.err.println("Client exception: " + e.toString());
             e.printStackTrace();
@@ -70,5 +65,24 @@ public class Client implements Serializable {
             }
         }
         return server.storeContent(contentId, content);
+    }
+
+    private void connectToServer() {
+        try {
+            server = loadBalancer.getEdgeWithLeastConnections();
+            System.out.println(
+                "Client " +
+                    clientId +
+                    " connected to server " +
+                    server.getServerId()
+            );
+            if (server == null) {
+                System.err.println("No available server");
+                return;
+            }
+        } catch (Exception e) {
+            System.err.println("Client exception: " + e.toString());
+            e.printStackTrace();
+        }
     }
 }

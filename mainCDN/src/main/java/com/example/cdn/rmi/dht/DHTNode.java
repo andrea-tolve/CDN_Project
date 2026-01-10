@@ -298,6 +298,7 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         }
         this.successor = null;
         this.predecessor = null;
+        UnicastRemoteObject.unexportObject(this, true);
     }
 
     public int getNodeId() throws RemoteException {

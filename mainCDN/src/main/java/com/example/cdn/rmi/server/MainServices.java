@@ -6,6 +6,7 @@ import com.example.cdn.rmi.register.RegistryServer;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Scanner;
 
 public class MainServices {
 
@@ -14,14 +15,14 @@ public class MainServices {
         EdgeServer[] edgeServers;
         DHTNode[] dhtTable;
         try {
-            edgeServers = new EdgeServer[5];
-            dhtTable = new DHTNode[5];
+            edgeServers = new EdgeServer[3];
+            dhtTable = new DHTNode[3];
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
-        EdgeRemote[] stubsEdge = new EdgeRemote[5];
-        DHTRemote[] stubsDHT = new DHTRemote[5];
+        EdgeRemote[] stubsEdge = new EdgeRemote[3];
+        DHTRemote[] stubsDHT = new DHTRemote[3];
         int cachecapacity = 10;
 
         for (int i = 0; i < edgeServers.length; i++) {
@@ -94,6 +95,27 @@ public class MainServices {
             System.out.println("RegisterService bound");
         } catch (Exception e) {
             System.err.println("RegisterService exception: " + e.toString());
+            e.printStackTrace();
+        }
+
+        boolean end = false;
+        Scanner scanner = null;
+        while (!end) {
+            System.out.println("Waiting for user exit input...");
+            scanner = new Scanner(System.in);
+            String input = scanner.nextLine();
+            if (input.equals("exit")) {
+                end = true;
+            }
+        }
+        System.out.println("Enter the ID of the edge server to shutdown:");
+        int id = scanner.nextInt();
+        scanner.close();
+        //Simulate that one server will go down
+        try {
+            stubsEdge[id].shutdown();
+            System.out.println("Edge server " + id + " shutdown");
+        } catch (RemoteException e) {
             e.printStackTrace();
         }
     }

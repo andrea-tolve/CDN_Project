@@ -66,8 +66,6 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
         throws RemoteException {
         if (!originServer.hasContent(contentId)) {
             originServer.storeContent(contentId, content, true);
-            addInCache(contentId, content);
-            dhtNode.add(contentId);
             return true;
         }
         return false;
@@ -81,6 +79,15 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
         String oldKey = cache.put(contentId, content);
         try {
             if (oldKey != null) dhtNode.remove(oldKey);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void shutdown() {
+        try {
+            UnicastRemoteObject.unexportObject(this, true);
+            this.dhtNode.leave();
         } catch (Exception e) {
             e.printStackTrace();
         }
