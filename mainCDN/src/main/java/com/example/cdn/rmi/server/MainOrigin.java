@@ -12,7 +12,7 @@ public class MainOrigin {
             OriginServer originServer = new OriginServer();
             for (File file : new File("res").listFiles()) {
                 byte[] content = Files.readAllBytes(file.toPath());
-                originServer.storeContent(file.getName(), content);
+                originServer.storeContent(file.getName(), content, false);
             }
             Naming.rebind("OriginServer", originServer);
             System.out.println("OriginServer bound");

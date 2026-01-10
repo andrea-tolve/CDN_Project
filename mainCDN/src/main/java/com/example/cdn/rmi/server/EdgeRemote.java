@@ -7,4 +7,6 @@ public interface EdgeRemote extends Remote {
     byte[] getContent(String contentId) throws RemoteException;
     boolean hasContent(String contentId) throws RemoteException;
     String getServerId() throws RemoteException;
+    boolean storeContent(String contentId, byte[] content)
+        throws RemoteException;
 }

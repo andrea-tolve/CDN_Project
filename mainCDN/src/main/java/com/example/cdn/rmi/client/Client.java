@@ -53,4 +53,22 @@ public class Client implements Serializable {
     public int getClientId() {
         return clientId;
     }
+
+    public boolean storeContent(String contentId, byte[] content)
+        throws RemoteException {
+        if (server == null) {
+            server = loadBalancer.getEdgeWithLeastConnections();
+            System.out.println(
+                "Client " +
+                    clientId +
+                    " connected to server " +
+                    server.getServerId()
+            );
+            if (server == null) {
+                System.err.println("No available server");
+                return false;
+            }
+        }
+        return server.storeContent(contentId, content);
+    }
 }

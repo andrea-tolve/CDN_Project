@@ -14,14 +14,14 @@ public class MainServices {
         EdgeServer[] edgeServers;
         DHTNode[] dhtTable;
         try {
-            edgeServers = new EdgeServer[3];
-            dhtTable = new DHTNode[3];
+            edgeServers = new EdgeServer[5];
+            dhtTable = new DHTNode[5];
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
-        EdgeRemote[] stubsEdge = new EdgeRemote[3];
-        DHTRemote[] stubsDHT = new DHTRemote[3];
+        EdgeRemote[] stubsEdge = new EdgeRemote[5];
+        DHTRemote[] stubsDHT = new DHTRemote[5];
         int cachecapacity = 10;
 
         for (int i = 0; i < edgeServers.length; i++) {
@@ -50,6 +50,18 @@ public class MainServices {
             edgeServers[i].setDHTNode(stubsDHT[i]);
         }
         System.out.println("Edge servers bound");
+        try {
+            for (int i = 0; i < edgeServers.length; i++) {
+                System.out.println(
+                    "Edge server " +
+                        i +
+                        " bound to DHT node " +
+                        stubsDHT[i].getNodeId()
+                );
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
         // Initialize the load balancer
         LoadBalancer loadBalancer;
         try {

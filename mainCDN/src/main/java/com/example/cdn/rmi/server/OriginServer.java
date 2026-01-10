@@ -1,5 +1,7 @@
 package com.example.cdn.rmi.server;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
@@ -14,9 +16,18 @@ public class OriginServer extends UnicastRemoteObject implements OriginRemote {
         storage = new HashMap<>();
     }
 
-    public void storeContent(String key, byte[] content)
+    public void storeContent(String key, byte[] content, boolean saveToDisk)
         throws RemoteException {
         storage.put(key, content);
+        if (saveToDisk) {
+            // Save content to disk
+            File file = new File("res/" + key);
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                fos.write(content);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void deleteContent(String key) throws RemoteException {
@@ -28,5 +39,9 @@ public class OriginServer extends UnicastRemoteObject implements OriginRemote {
             return storage.get(key);
         }
         return null;
+    }
+
+    public boolean hasContent(String contentId) throws RemoteException {
+        return storage.containsKey(contentId);
     }
 }

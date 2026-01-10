@@ -184,41 +184,12 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
             pred = this.predecessor;
             nodeIdRemote = node.getNodeId();
         } catch (RemoteException e) {
-            // if remote calls fail, keep existing predecessor
             return;
         }
         // if node is in (pred, this), update predecessor
         if (inInterval(pred.getNodeId(), this.nodeId, nodeIdRemote, false)) {
             this.predecessor = node;
         }
-    }
-
-    public int getNodeId() throws RemoteException {
-        return this.nodeId;
-    }
-
-    public DHTRemote getSuccessor() throws RemoteException {
-        return this.successor;
-    }
-
-    public DHTRemote getPredecessor() throws RemoteException {
-        return this.predecessor;
-    }
-
-    public EdgeRemote getEdge() throws RemoteException {
-        return this.edgeServer;
-    }
-
-    public void setSuccessor(DHTRemote succ) throws RemoteException {
-        this.successor = succ;
-    }
-
-    public void setPredecessor(DHTRemote pred) throws RemoteException {
-        this.predecessor = pred;
-    }
-
-    public boolean hasKey(String contentId) throws RemoteException {
-        return this.keySet.contains(contentId);
     }
 
     public void stabilize(DHTRemote bootstrapNode) throws RemoteException {
@@ -288,8 +259,12 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
             System.out.println(
                 "Edge: " +
                     this.edgeServer.getServerId() +
+                    " with id " +
+                    this.nodeId +
                     ", Adding contentId: " +
-                    contentId
+                    contentId +
+                    " with id " +
+                    id
             );
             this.keySet.add(contentId);
         }
@@ -323,5 +298,33 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         }
         this.successor = null;
         this.predecessor = null;
+    }
+
+    public int getNodeId() throws RemoteException {
+        return this.nodeId;
+    }
+
+    public DHTRemote getSuccessor() throws RemoteException {
+        return this.successor;
+    }
+
+    public DHTRemote getPredecessor() throws RemoteException {
+        return this.predecessor;
+    }
+
+    public EdgeRemote getEdge() throws RemoteException {
+        return this.edgeServer;
+    }
+
+    public void setSuccessor(DHTRemote succ) throws RemoteException {
+        this.successor = succ;
+    }
+
+    public void setPredecessor(DHTRemote pred) throws RemoteException {
+        this.predecessor = pred;
+    }
+
+    public boolean hasKey(String contentId) throws RemoteException {
+        return this.keySet.contains(contentId);
     }
 }

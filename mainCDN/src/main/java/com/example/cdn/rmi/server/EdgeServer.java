@@ -62,6 +62,17 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
         }
     }
 
+    public boolean storeContent(String contentId, byte[] content)
+        throws RemoteException {
+        if (!originServer.hasContent(contentId)) {
+            originServer.storeContent(contentId, content, true);
+            addInCache(contentId, content);
+            dhtNode.add(contentId);
+            return true;
+        }
+        return false;
+    }
+
     public String getServerId() throws RemoteException {
         return serverId;
     }
