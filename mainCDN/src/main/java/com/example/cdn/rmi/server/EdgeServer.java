@@ -62,6 +62,10 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
         }
     }
 
+    public String getServerId() throws RemoteException {
+        return serverId;
+    }
+
     private void addInCache(String contentId, byte[] content) {
         String oldKey = cache.put(contentId, content);
         try {
@@ -69,9 +73,5 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public String getServerId() throws RemoteException {
-        return serverId;
     }
 }

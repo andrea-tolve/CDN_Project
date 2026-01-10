@@ -10,14 +10,12 @@ public class Client implements Serializable {
 
     private String serverlb = "//localhost/LoadBalancer";
     private int clientId;
-    private String clientToken;
     private EdgeRemote server;
     private LoadBalancerRemote loadBalancer;
     private byte[] content;
 
-    public Client(int clientId, String clientToken) {
+    public Client(int clientId) {
         this.clientId = clientId;
-        this.clientToken = clientToken;
         this.server = null;
         try {
             this.loadBalancer = (LoadBalancerRemote) Naming.lookup(serverlb);
@@ -54,13 +52,5 @@ public class Client implements Serializable {
 
     public int getClientId() {
         return clientId;
-    }
-
-    public void setToken(String token) {
-        this.clientToken = token;
-    }
-
-    public String getClientToken() {
-        return clientToken;
     }
 }

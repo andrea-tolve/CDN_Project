@@ -16,7 +16,8 @@ public class MainClient {
             registry = (RegistryRemote) Naming.lookup(
                 "//localhost/RegistryServer"
             );
-            client = registry.register();
+            int id = registry.register();
+            client = new Client(id);
         } catch (Exception e) {
             e.printStackTrace();
             return;
