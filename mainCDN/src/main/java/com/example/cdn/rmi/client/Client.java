@@ -31,10 +31,12 @@ public class Client implements Serializable {
                 connectToServer();
             }
             content = server.getContent(contentId);
+            return;
         } catch (NoSuchObjectException e) {
             System.out.println("Server is not available");
             server = null;
             connectToServer();
+            this.requestContent(contentId);
         } catch (RemoteException e) {
             System.err.println("Client exception: " + e.toString());
             e.printStackTrace();
@@ -51,20 +53,13 @@ public class Client implements Serializable {
 
     public boolean storeContent(String contentId, byte[] content)
         throws RemoteException {
-        if (server == null) {
-            server = loadBalancer.getEdgeWithLeastConnections();
-            System.out.println(
-                "Client " +
-                    clientId +
-                    " connected to server " +
-                    server.getServerId()
-            );
-            if (server == null) {
-                System.err.println("No available server");
-                return false;
-            }
+        if (server == null) connectToServer();
+        try {
+            return server.storeContent(contentId, content);
+        } catch (NoSuchObjectException e) {
+            connectToServer();
+            return storeContent(contentId, content);
         }
-        return server.storeContent(contentId, content);
     }
 
     private void connectToServer() {

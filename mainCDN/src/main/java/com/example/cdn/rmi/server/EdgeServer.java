@@ -38,6 +38,7 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
         if (cache.hasContent(contentId)) {
             //search in cache
             System.out.println("Get it from cache of " + serverId);
+            dhtNode.add(contentId);
             return cache.get(contentId);
         } else {
             //search in DHT

@@ -255,7 +255,7 @@ public class DHTNode extends UnicastRemoteObject implements DHTRemote {
         // Store resource in dht only if this is the correct node
         int id = sha1ToInt(contentId);
         DHTRemote successor = findSuccessor(id); //test from here which successor is returned
-        if (successor == this) {
+        if (successor == this && !successor.hasKey(contentId)) {
             System.out.println(
                 "Edge: " +
                     this.edgeServer.getServerId() +
