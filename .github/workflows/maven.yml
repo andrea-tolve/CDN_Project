@@ -27,8 +27,8 @@ jobs:
           distribution: "temurin"
           cache: maven
       - name: Build with Maven
-        working-directory: mainCDN
+        working-directory: cdn
         run: mvn -B package
       - name: Build and test
-        working-directory: mainCDN
+        working-directory: cdn
         run: mvn -B verify

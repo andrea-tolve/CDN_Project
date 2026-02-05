@@ -3,8 +3,7 @@
 .project
 .settings/
 .classpath
-mainCDN/target
+cdn/target
 data/
 TODO.md
-mainCDN/res
 *.puml
