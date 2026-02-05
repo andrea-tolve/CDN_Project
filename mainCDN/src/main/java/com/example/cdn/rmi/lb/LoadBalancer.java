@@ -55,6 +55,17 @@ public class LoadBalancer
         return bestEdge;
     }
 
+    /**
+     *
+     * @param edge
+     * @throws RemoteException
+     * Public API to remove an edge from the load balancer.
+     * For testing purposes only.
+     */
+    public void removeEdgePublic(EdgeRemote edge) throws RemoteException {
+        activeConnections.remove(edge);
+    }
+
     private void removeEdge(EdgeRemote edge) throws RemoteException {
         activeConnections.remove(edge);
     }

@@ -15,6 +15,13 @@ public class Client implements Serializable {
     private LoadBalancerRemote loadBalancer;
     private byte[] content;
 
+    //Test constructor
+    public Client(int clientId, LoadBalancerRemote loadBalancer) {
+        this.clientId = clientId;
+        this.server = null;
+        this.loadBalancer = loadBalancer;
+    }
+
     public Client(int clientId) {
         this.clientId = clientId;
         this.server = null;
@@ -49,6 +56,14 @@ public class Client implements Serializable {
 
     public int getClientId() {
         return clientId;
+    }
+
+    public EdgeRemote getEdgeServer() {
+        return server;
+    }
+
+    public void setServer(EdgeRemote server) {
+        this.server = server;
     }
 
     public boolean storeContent(String contentId, byte[] content)

@@ -76,6 +76,14 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
         return serverId;
     }
 
+    /*
+     * Set the origin server for this edge server.
+     * Only for testing purposes.
+     */
+    public void setOriginServer(OriginRemote originServer) {
+        this.originServer = originServer;
+    }
+
     private void addInCache(String contentId, byte[] content) {
         String oldKey = cache.put(contentId, content);
         try {
