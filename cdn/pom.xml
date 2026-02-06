@@ -25,6 +25,31 @@
               <artifactId>maven-surefire-plugin</artifactId>
               <version>3.2.5</version>
           </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>2.4.1</version>
+            <executions>
+              <execution>
+                <id>build-first</id>
+                <phase>package</phase>
+                <goals>
+                   <goal>shade</goal>
+                </goals>
+                <configuration>
+                  <transformers>
+                    <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"
+                                >
+                      <mainClass>com.example.cdn.rmi.Main</mainClass>
+                    </transformer>
+                  </transformers>
+                  <finalName>main-runnable</finalName>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
       </plugins>
   </build>
 </project>

@@ -24,11 +24,8 @@ public class IntegrationTest {
     @BeforeEach
     public void setUp() throws Exception {
         origin = new OriginServer();
-        edge1 = new EdgeServer("edge-1", new Cache(2));
-        edge2 = new EdgeServer("edge-2", new Cache(2));
-
-        edge1.setOriginServer(origin);
-        edge2.setOriginServer(origin);
+        edge1 = new EdgeServer("edge-1", new Cache(2), origin);
+        edge2 = new EdgeServer("edge-2", new Cache(2), origin);
 
         node1 = new DHTNode("edge-1", edge1);
         node2 = new DHTNode("edge-2", edge2);
@@ -90,19 +87,19 @@ public class IntegrationTest {
     @Test
     public void client_storeContent() throws Exception {
         Client client = new Client(102, lb);
-        client.storeContent("C.txt", "C".getBytes());
+        client.storeContent("Test.txt", "Test".getBytes());
         assertArrayEquals(
-            "C".getBytes(),
-            origin.getContent("C.txt"),
-            "C.txt needs to be stored"
+            "Test".getBytes(),
+            origin.getContent("Test.txt"),
+            "Test.txt needs to be stored"
         );
 
         Client client2 = new Client(103, lb);
-        client2.requestContent("C.txt");
+        client2.requestContent("Test.txt");
         assertArrayEquals(
-            "C".getBytes(),
+            "Test".getBytes(),
             client2.getContent(),
-            "C.txt needs to be retrieved"
+            "Test.txt needs to be retrieved"
         );
     }
 

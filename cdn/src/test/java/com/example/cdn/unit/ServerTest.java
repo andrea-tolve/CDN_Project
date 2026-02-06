@@ -22,9 +22,8 @@ class ServerTest {
     public void edgeServer_servesFromOrigin_thenFromCache() throws Exception {
         String id = "edge-A";
         Cache cache = new Cache(2);
-        EdgeServer edge = new EdgeServer(id, cache);
+        EdgeServer edge = new EdgeServer(id, cache, origin);
         edge.setDHTNode(dht); // public setter for DHT
-        edge.setOriginServer(origin); // public setter for Origin
 
         String contentId = "asset-3";
         byte[] bytes = "payload".getBytes();
@@ -59,9 +58,8 @@ class ServerTest {
     @Test
     public void edgeServer_fetchFromPeerViaDHT_withoutTouchingOrigin()
         throws Exception {
-        EdgeServer edge = new EdgeServer("edge-B", new Cache(2));
+        EdgeServer edge = new EdgeServer("edge-B", new Cache(2), origin);
         edge.setDHTNode(dht);
-        edge.setOriginServer(origin);
 
         String contentId = "asset-4";
         byte[] peerData = "from-peer".getBytes();
@@ -88,9 +86,8 @@ class ServerTest {
 
     @Test
     public void edgeServer_eviction_removesOldKeyFromDHT() throws Exception {
-        EdgeServer edge = new EdgeServer("edge-C", new Cache(2));
+        EdgeServer edge = new EdgeServer("edge-C", new Cache(2), origin);
         edge.setDHTNode(dht);
-        edge.setOriginServer(origin);
 
         // Seed origin for three different contents
         origin.storeContent("A", "A".getBytes(), false);
@@ -115,9 +112,8 @@ class ServerTest {
 
     @Test
     public void edgeServer_notStoreDuplicateContent() throws Exception {
-        EdgeServer edge = new EdgeServer("edge-D", new Cache(2));
+        EdgeServer edge = new EdgeServer("edge-D", new Cache(2), origin);
         edge.setDHTNode(dht);
-        edge.setOriginServer(origin);
 
         String contentId = "asset-4";
         byte[] peerData = "payload".getBytes();

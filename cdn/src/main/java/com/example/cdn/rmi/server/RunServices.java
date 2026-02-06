@@ -8,7 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 
-public class MainServices {
+public class RunServices {
 
     public static void main(String[] args) {
         // Initialize the edge servers and the DHT table, with their respective stubs

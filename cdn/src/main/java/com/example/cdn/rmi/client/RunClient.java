@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.rmi.Naming;
 import java.util.Scanner;
 
-public class MainClient {
+public class RunClient {
 
     public static void main(String[] args) {
         // Client runtime

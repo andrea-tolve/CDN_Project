@@ -26,6 +26,23 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
         }
     }
 
+    /**
+     *
+     * @param serverId
+     * @param cache
+     * @param originServer
+     * @throws RemoteException
+     *
+     * Only for testing purposes.
+     */
+    public EdgeServer(String serverId, Cache cache, OriginRemote originServer)
+        throws RemoteException {
+        super();
+        this.serverId = serverId;
+        this.cache = cache;
+        this.originServer = originServer;
+    }
+
     public void setDHTNode(DHTRemote stub) {
         this.dhtNode = stub;
     }
@@ -74,14 +91,6 @@ public class EdgeServer extends UnicastRemoteObject implements EdgeRemote {
 
     public String getServerId() throws RemoteException {
         return serverId;
-    }
-
-    /*
-     * Set the origin server for this edge server.
-     * Only for testing purposes.
-     */
-    public void setOriginServer(OriginRemote originServer) {
-        this.originServer = originServer;
     }
 
     private void addInCache(String contentId, byte[] content) {

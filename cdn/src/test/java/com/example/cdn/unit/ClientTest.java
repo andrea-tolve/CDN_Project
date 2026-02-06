@@ -17,12 +17,12 @@ public class ClientTest {
         Client client3;
 
         // Register and check clients ids
-        client1 = new Client(registry.register());
+        client1 = new Client(registry.register(), null);
         assertTrue(
             client1.getClientId() == 1,
             "First client has not the first id"
         );
-        client2 = new Client(registry.register());
+        client2 = new Client(registry.register(), null);
         assertTrue(
             client2.getClientId() == 2,
             "Second client has not the second id"
@@ -30,7 +30,7 @@ public class ClientTest {
 
         // Unregister the first client and register a new client
         registry.unregister(client1.getClientId());
-        client3 = new Client(registry.register());
+        client3 = new Client(registry.register(), null);
         assertTrue(
             client3.getClientId() == 1,
             "Third client does not reuse the id"
